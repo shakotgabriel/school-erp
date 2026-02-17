@@ -1,35 +1,61 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { BrowserRouter, Route, Routes } from "react-router-dom";
 
-function App() {
-  const [count, setCount] = useState(0)
+import { AuthLayout } from "./layouts/AuthLayout";
+import { DashboardLayout } from "./layouts/DashboardLayout";
+import { RoleLayout } from "./layouts/RoleLayout";
+import AdminDashboard from "./pages/AdminDashboard";
+import AccountantDashboard from "./pages/AccountantDashboard";
+import HRDashboard from "./pages/HRDashboard";
+import StudentDashboard from "./pages/StudentDashboard";
+import TeacherDashboard from "./pages/TeacherDashboard";
+import NotFound from "./pages/NotFound";
+import ForgotPasswordPage from "./pages/auth/ForgotPasswordPage";
+import LoginPage from "./pages/auth/LoginPage";
+import RegisterPage from "./pages/auth/registerpage";
+import { ProtectedRoute } from "./routes/ProtectedRoute";
+import { paths } from "./routes/paths";
+import { RoleRoute } from "./routes/RoleRoute";
 
+export default function App() {
   return (
-    <>
-      <div className='bg-black'>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
-}
+    <BrowserRouter>
+      <Routes>
+        <Route element={<AuthLayout />}>
+          <Route path={paths.login} element={<LoginPage />} />
+          <Route path={paths.forgotPassword} element={<ForgotPasswordPage />} />
+        </Route>
 
-export default App
+        <Route element={<ProtectedRoute />}>
+          <Route element={<RoleLayout />}>
+            <Route element={<DashboardLayout />}>
+              <Route path={paths.root} element={<div />} />
+
+              <Route element={<RoleRoute allowedRoles={["admin"]} />}>
+                <Route path={paths.admin} element={<AdminDashboard />} />
+                <Route path={paths.adminRegister} element={<RegisterPage />} />
+              </Route>
+
+              <Route element={<RoleRoute allowedRoles={["teacher"]} />}>
+                <Route path={paths.teacher} element={<TeacherDashboard />} />
+              </Route>
+
+              <Route element={<RoleRoute allowedRoles={["accountant"]} />}>
+                <Route path={paths.accountant} element={<AccountantDashboard />} />
+              </Route>
+
+              <Route element={<RoleRoute allowedRoles={["hr"]} />}>
+                <Route path={paths.hr} element={<HRDashboard />} />
+              </Route>
+
+              <Route element={<RoleRoute allowedRoles={["student"]} />}>
+                <Route path={paths.student} element={<StudentDashboard />} />
+              </Route>
+            </Route>
+          </Route>
+        </Route>
+
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+    </BrowserRouter>
+  );
+}
