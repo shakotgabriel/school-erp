@@ -1,7 +1,7 @@
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 
 import { AuthLayout } from "./layouts/AuthLayout";
-import { DashboardLayout } from "./layouts/DashboardLayout";
+import DashboardLayout from "./layouts/DashboardLayout";
 import { RoleLayout } from "./layouts/RoleLayout";
 import AdminDashboard from "./pages/AdminDashboard";
 import AccountantDashboard from "./pages/AccountantDashboard";
