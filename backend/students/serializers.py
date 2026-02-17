@@ -2,6 +2,7 @@ from rest_framework import serializers
 from .models import StudentProfile, Enrollment
 from adminstration.models import AcademicYear, SchoolClass, Section
 from admission.models import Guardian, AdmissionApplication
+from .models import TeacherAssignment
 
 class StudentProfileSerializer(serializers.ModelSerializer):
     guardian = serializers.PrimaryKeyRelatedField(queryset=Guardian.objects.all(), required=False, allow_null=True)
@@ -17,4 +18,18 @@ class EnrollmentSerializer(serializers.ModelSerializer):
     section = serializers.PrimaryKeyRelatedField(queryset=Section.objects.all(), required=False, allow_null=True)
     class Meta:
         model = Enrollment
+        fields = "__all__"
+
+class TeacherAssignmentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = TeacherAssignment
+        fields = "__all__"
+class MedicalRecordSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = MedicalRecord
+        fields = "__all__"
+
+class DisciplineRecordSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = DisciplineRecord
         fields = "__all__"

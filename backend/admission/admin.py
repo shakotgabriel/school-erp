@@ -1,6 +1,8 @@
 
 from .models import Guardian, AdmissionApplication
 
+import django.contrib.admin as admin
+
 @admin.register(Guardian)
 class GuardianAdmin(admin.ModelAdmin):
 	list_display = ("first_name", "last_name", "phone", "email", "relationship")

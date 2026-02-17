@@ -1,6 +1,9 @@
 
 from .models import AcademicYear, Term, SchoolClass, Stream, Section, Subject
 
+
+import django.contrib.admin as admin
+
 @admin.register(AcademicYear)
 class AcademicYearAdmin(admin.ModelAdmin):
 	list_display = ("name", "start_date", "end_date", "is_active")
