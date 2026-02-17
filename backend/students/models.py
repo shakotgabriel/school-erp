@@ -1,4 +1,7 @@
-from adminstration.models import Subject
+from django.db import models
+from django.conf import settings
+from adminstration.models import Subject, AcademicYear, SchoolClass, Section
+
 class TeacherAssignment(models.Model):
 	teacher = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, limit_choices_to={"role": "teacher"}, related_name="assignments")
 	subject = models.ForeignKey(Subject, on_delete=models.CASCADE, related_name="teacher_assignments")
@@ -12,9 +15,7 @@ class TeacherAssignment(models.Model):
 
 	def __str__(self):
 		return f"{self.teacher} - {self.subject} - {self.school_class} - {self.section or ''} ({self.academic_year})"
-from django.conf import settings
-from django.db import models
-from adminstration.models import AcademicYear, SchoolClass, Section
+
 
 class StudentProfile(models.Model):
 	user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="student_profile", blank=True, null=True)

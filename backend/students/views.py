@@ -1,17 +1,24 @@
 
 
-from rest_framework import viewsets, status
+from rest_framework import viewsets, status, filters
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from .models import StudentProfile, Enrollment, MedicalRecord, DisciplineRecord
-from .serializers import StudentProfileSerializer, EnrollmentSerializer, MedicalRecordSerializer, DisciplineRecordSerializer
-from .serializers import TeacherAssignmentSerializer
-from users.permissions import IsAdmin
+from django_filters.rest_framework import DjangoFilterBackend
+from .models import StudentProfile, Enrollment, MedicalRecord, DisciplineRecord, TeacherAssignment
+from .serializers import StudentProfileSerializer, EnrollmentSerializer, MedicalRecordSerializer, DisciplineRecordSerializer, TeacherAssignmentSerializer
+from users.permissions import IsAdmin, IsTeacher, IsStudent, IsOwnerOrReadOnly, IsAdminOrRole
 
 class StudentProfileViewSet(viewsets.ModelViewSet):
 	queryset = StudentProfile.objects.all()
 	serializer_class = StudentProfileSerializer
-	permission_classes = [IsAdmin]
+	# Admins can manage all, students can view their own profile
+	def get_permissions(self):
+		if self.action in ['list', 'retrieve']:
+			return [IsAdminOrRole('student')]
+		return [IsAdmin()]
+	filter_backends = [DjangoFilterBackend, filters.SearchFilter]
+	filterset_fields = ['admission_number', 'guardian', 'admission_application']
+	search_fields = ['first_name', 'last_name', 'admission_number']
 
 	@action(detail=False, methods=["post"], url_path="bulk-create")
 	def bulk_create(self, request):
@@ -23,18 +30,47 @@ class StudentProfileViewSet(viewsets.ModelViewSet):
 class EnrollmentViewSet(viewsets.ModelViewSet):
 	queryset = Enrollment.objects.all()
 	serializer_class = EnrollmentSerializer
-	permission_classes = [IsAdmin]
+	# Admins can manage all, students can view their own enrollment
+	def get_permissions(self):
+		if self.action in ['list', 'retrieve']:
+			return [IsAdminOrRole('student')]
+		return [IsAdmin()]
+	filter_backends = [DjangoFilterBackend, filters.SearchFilter]
+	filterset_fields = ['student', 'academic_year', 'school_class', 'section']
+	search_fields = []
 
 class MedicalRecordViewSet(viewsets.ModelViewSet):
 	queryset = MedicalRecord.objects.all()
 	serializer_class = MedicalRecordSerializer
-	permission_classes = [IsAdmin]
+	# Admins can manage all, students can view their own medical records
+	def get_permissions(self):
+		if self.action in ['list', 'retrieve']:
+			return [IsAdminOrRole('student')]
+		return [IsAdmin()]
+	filter_backends = [DjangoFilterBackend, filters.SearchFilter]
+	filterset_fields = ['student']
+	search_fields = ['description', 'doctor', 'notes']
 
 class TeacherAssignmentViewSet(viewsets.ModelViewSet):
 	queryset = TeacherAssignment.objects.all()
 	serializer_class = TeacherAssignmentSerializer
-	permission_classes = [IsAdmin]
+	# Admins can manage all, teachers can view their own assignments
+	def get_permissions(self):
+		if self.action in ['list', 'retrieve']:
+			return [IsAdminOrRole('teacher')]
+		# Only admins can create, update, or delete assignments
+		return [IsAdmin()]
+	filter_backends = [DjangoFilterBackend, filters.SearchFilter]
+	filterset_fields = ['teacher', 'subject', 'school_class', 'section', 'academic_year']
+	search_fields = []
 class DisciplineRecordViewSet(viewsets.ModelViewSet):
 	queryset = DisciplineRecord.objects.all()
 	serializer_class = DisciplineRecordSerializer
-	permission_classes = [IsAdmin]
+	# Admins can manage all, students can view their own discipline records
+	def get_permissions(self):
+		if self.action in ['list', 'retrieve']:
+			return [IsAdminOrRole('student')]
+		return [IsAdmin()]
+	filter_backends = [DjangoFilterBackend, filters.SearchFilter]
+	filterset_fields = ['student']
+	search_fields = ['incident', 'action_taken', 'reported_by']

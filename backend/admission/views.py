@@ -5,7 +5,7 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from .models import Guardian, AdmissionApplication
 from .serializers import GuardianSerializer, AdmissionApplicationSerializer
-from users.permissions import IsAdmin
+from users.permissions import IsAdmin, IsAdminOrHR
 from students.models import StudentProfile, Enrollment
 from students.serializers import StudentProfileSerializer, EnrollmentSerializer
 
@@ -17,7 +17,10 @@ class GuardianViewSet(viewsets.ModelViewSet):
 class AdmissionApplicationViewSet(viewsets.ModelViewSet):
 	queryset = AdmissionApplication.objects.all()
 	serializer_class = AdmissionApplicationSerializer
-	permission_classes = [IsAdmin]
+	def get_permissions(self):
+		if self.action == 'accept_application':
+			return [IsAdminOrHR()]
+		return [IsAdmin()]
 
 	@action(detail=True, methods=["post"], url_path="accept")
 	def accept_application(self, request, pk=None):

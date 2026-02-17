@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import StudentProfile, Enrollment
+from .models import StudentProfile, Enrollment, MedicalRecord, DisciplineRecord
 from adminstration.models import AcademicYear, SchoolClass, Section
 from admission.models import Guardian, AdmissionApplication
 from .models import TeacherAssignment
@@ -24,6 +24,22 @@ class TeacherAssignmentSerializer(serializers.ModelSerializer):
     class Meta:
         model = TeacherAssignment
         fields = "__all__"
+
+    def validate(self, data):
+        teacher = data.get('teacher')
+        subject = data.get('subject')
+        school_class = data.get('school_class')
+        section = data.get('section')
+        academic_year = data.get('academic_year')
+        if TeacherAssignment.objects.filter(
+            teacher=teacher,
+            subject=subject,
+            school_class=school_class,
+            section=section,
+            academic_year=academic_year
+        ).exists():
+            raise serializers.ValidationError("This teacher is already assigned to this subject, class, section, and academic year.")
+        return data
 class MedicalRecordSerializer(serializers.ModelSerializer):
     class Meta:
         model = MedicalRecord

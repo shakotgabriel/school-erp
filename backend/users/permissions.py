@@ -1,5 +1,30 @@
 from rest_framework import permissions
 
+class IsAdminOrHR(permissions.BasePermission):
+    """
+    Allow Admins and HR to perform restricted actions (e.g., accept admissions).
+    """
+    def has_permission(self, request, view):
+        user = getattr(request, "user", None)
+        return getattr(user, "is_authenticated", False) and getattr(user, "role", None) in ("admin", "hr")
+from rest_framework import permissions
+
+class IsAdminOrRole(permissions.BasePermission):
+    """
+    Allow access to admins or users with a specific role.
+    Usage: IsAdminOrRole('teacher'), IsAdminOrRole('student')
+    """
+    def __init__(self, role):
+        self.role = role
+
+    def has_permission(self, request, view):
+        user = getattr(request, "user", None)
+        return (
+            getattr(user, "is_authenticated", False)
+            and (getattr(user, "role", None) == "admin" or getattr(user, "role", None) == self.role)
+        )
+from rest_framework import permissions
+
 
 class RoleRequired(permissions.BasePermission):
     """Allow access only to authenticated users with one of the allowed roles.
