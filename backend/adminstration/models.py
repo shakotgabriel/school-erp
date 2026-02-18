@@ -49,7 +49,7 @@ class Term(models.Model):
 	def clean(self):
 		if self.start_date and self.end_date and self.start_date >= self.end_date:
 			raise ValidationError({"end_date": "End date must be later than start date."})
-		if self.academic_year_id:
+		if self.academic_year:
 			if self.start_date < self.academic_year.start_date or self.end_date > self.academic_year.end_date:
 				raise ValidationError({
 					"start_date": "Term dates must be within the selected academic year.",
@@ -131,7 +131,7 @@ class Section(models.Model):
 		]
 
 	def clean(self):
-		if self.stream_id and self.stream.school_class_id != self.school_class_id:
+		if self.stream and self.stream.school_class != self.school_class:
 			raise ValidationError({"stream": "Selected stream does not belong to this class."})
 
 	def __str__(self):
