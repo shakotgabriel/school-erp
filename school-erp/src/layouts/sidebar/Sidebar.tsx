@@ -1,10 +1,10 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { NavLink, useLocation } from "react-router-dom";
 import { navByRole, type NavItem } from "./nav.config";
 import { useAuthStore } from "../../store/auth.store";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { ChevronDown, LogOut } from "lucide-react";
+import { ChevronDown, LogOut, X } from "lucide-react";
 
 function isPathActive(pathname: string, to?: string) {
   if (!to) return false;
@@ -98,7 +98,7 @@ function NavGroup({
   );
 }
 
-export default function Sidebar() {
+export default function Sidebar({ open, onClose }: { open?: boolean; onClose?: () => void }) {
   const location = useLocation();
   const pathname = location.pathname;
 
@@ -108,19 +108,51 @@ export default function Sidebar() {
   const role = user?.role ?? "student";
   const items = navByRole[role] ?? [];
 
+  // Close sidebar on route change (mobile)
+  useEffect(() => {
+    if (onClose) {
+      onClose();
+    }
+  }, [pathname]);
+
   return (
-    <aside className="sticky top-0 h-screen w-64 border-r bg-background hidden md:flex flex-col">
-      {/* Brand */}
-      <div className="px-4 py-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <div className="text-base font-semibold">School ERP</div>
-            <div className="text-xs text-muted-foreground">
-              {role.toUpperCase()} Portal
+    <>
+      {/* Mobile overlay */}
+      {open && (
+        <div
+          className="fixed inset-0 z-40 bg-black/50 md:hidden"
+          onClick={onClose}
+        />
+      )}
+
+      {/* Sidebar */}
+      <aside
+        className={`
+          fixed md:sticky top-0 h-screen w-64 border-r bg-background z-50 flex flex-col
+          transition-transform duration-300 md:translate-x-0
+          ${open ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
+        `}
+      >
+        {/* Brand */}
+        <div className="px-4 py-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <div className="text-base font-semibold">School ERP</div>
+              <div className="text-xs text-muted-foreground">
+                {role.toUpperCase()} Portal
+              </div>
             </div>
+            {/* Close button for mobile */}
+            <Button
+              variant="ghost"
+              size="sm"
+              className="md:hidden"
+              onClick={onClose}
+            >
+              <X className="h-5 w-5" />
+            </Button>
           </div>
         </div>
-      </div>
 
       <Separator />
 
@@ -145,5 +177,6 @@ export default function Sidebar() {
         </Button>
       </div>
     </aside>
+    </>
   );
 }

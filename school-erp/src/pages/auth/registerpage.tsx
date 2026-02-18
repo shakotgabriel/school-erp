@@ -68,8 +68,8 @@ export default function RegisterPage() {
         </CardHeader>
 
         <CardContent>
-          <form onSubmit={onSubmit} className="space-y-4">
-            <div className="space-y-2">
+          <form onSubmit={onSubmit} className="space-y-3 md:space-y-4">
+            <div className="space-y-1.5 md:space-y-2">
               <Label htmlFor="fullName">Full name</Label>
               <Input
                 id="fullName"
@@ -80,7 +80,7 @@ export default function RegisterPage() {
               />
             </div>
 
-            <div className="space-y-2">
+            <div className="space-y-1.5 md:space-y-2">
               <Label htmlFor="email">Email</Label>
               <Input
                 id="email"
@@ -92,7 +92,7 @@ export default function RegisterPage() {
               />
             </div>
 
-            <div className="space-y-2">
+            <div className="space-y-1.5 md:space-y-2">
               <Label>Role</Label>
               <Select value={role} onValueChange={(v) => setRole(v as Role)}>
                 <SelectTrigger>
@@ -108,7 +108,7 @@ export default function RegisterPage() {
             </div>
 
             {role === "student" && (
-              <div className="space-y-2">
+              <div className="space-y-1.5 md:space-y-2">
                 <Label htmlFor="admission">Admission number</Label>
                 <Input
                   id="admission"
@@ -119,7 +119,7 @@ export default function RegisterPage() {
               </div>
             )}
 
-            <div className="space-y-2">
+            <div className="space-y-1.5 md:space-y-2">
               <Label htmlFor="password">Password</Label>
               <Input
                 id="password"
@@ -131,7 +131,7 @@ export default function RegisterPage() {
               />
             </div>
 
-            {error && <div className="text-sm text-red-600">{error}</div>}
+            {error && <div className="text-xs md:text-sm text-red-600">{error}</div>}
 
             <Button className="w-full" type="submit" disabled={loading}>
               {loading ? "Creating..." : "Create account"}

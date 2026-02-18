@@ -1,4 +1,4 @@
 export default function StudentDashboard() {
-	return <div className="text-lg font-medium">Student dashboard</div>;
+	return <div className="text-base md:text-lg font-medium">Student dashboard</div>;
 }
 

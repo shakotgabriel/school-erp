@@ -52,7 +52,7 @@ export default function LoginPage() {
 			</CardHeader>
 			<CardContent>
 				<form
-					className="space-y-4"
+					className="space-y-3 md:space-y-4"
 					onSubmit={form.handleSubmit(async (values) => {
 						clearError();
 						try {
@@ -83,7 +83,7 @@ export default function LoginPage() {
 						}
 					})}
 				>
-					<div className="space-y-2">
+					<div className="space-y-1.5 md:space-y-2">
 						<label className="text-sm font-medium">Identifier</label>
 						<Input
 							placeholder="Email or admission number"
@@ -91,11 +91,11 @@ export default function LoginPage() {
 							{...form.register("identifier")}
 						/>
 						{form.formState.errors.identifier?.message ? (
-							<p className="text-sm text-destructive">{form.formState.errors.identifier.message}</p>
+							<p className="text-xs md:text-sm text-destructive">{form.formState.errors.identifier.message}</p>
 						) : null}
 					</div>
 
-					<div className="space-y-2">
+					<div className="space-y-1.5 md:space-y-2">
 						<label className="text-sm font-medium">Password</label>
 						<Input
 							type="password"
@@ -104,11 +104,11 @@ export default function LoginPage() {
 							{...form.register("password")}
 						/>
 						{form.formState.errors.password?.message ? (
-							<p className="text-sm text-destructive">{form.formState.errors.password.message}</p>
+							<p className="text-xs md:text-sm text-destructive">{form.formState.errors.password.message}</p>
 						) : null}
 					</div>
 
-					{error ? <p className="text-sm text-destructive">{error}</p> : null}
+					{error ? <p className="text-xs md:text-sm text-destructive">{error}</p> : null}
 
 					<Button type="submit" className="w-full" disabled={isLoading}>
 						{isLoading ? "Signing in..." : "Sign in"}

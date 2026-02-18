@@ -34,7 +34,7 @@ export default function ForgotPasswordPage() {
 			</CardHeader>
 			<CardContent>
 				<form
-					className="space-y-4"
+					className="space-y-3 md:space-y-4"
 					onSubmit={form.handleSubmit(async (values) => {
 						setIsLoading(true);
 						setError(null);
@@ -49,16 +49,16 @@ export default function ForgotPasswordPage() {
 						}
 					})}
 				>
-					<div className="space-y-2">
+					<div className="space-y-1.5 md:space-y-2">
 						<label className="text-sm font-medium">Email</label>
 						<Input placeholder="name@school.com" autoComplete="email" {...form.register("email")} />
 						{form.formState.errors.email?.message ? (
-							<p className="text-sm text-destructive">{form.formState.errors.email.message}</p>
+							<p className="text-xs md:text-sm text-destructive">{form.formState.errors.email.message}</p>
 						) : null}
 					</div>
 
-					{message ? <p className="text-sm text-muted-foreground">{message}</p> : null}
-					{error ? <p className="text-sm text-destructive">{error}</p> : null}
+					{message ? <p className="text-xs md:text-sm text-muted-foreground">{message}</p> : null}
+					{error ? <p className="text-xs md:text-sm text-destructive">{error}</p> : null}
 
 					<Button type="submit" className="w-full" disabled={isLoading}>
 						{isLoading ? "Sending..." : "Send reset link"}
