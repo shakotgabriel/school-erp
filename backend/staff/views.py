@@ -167,7 +167,6 @@ class LeaveViewSet(viewsets.ModelViewSet):
         by_status = self.queryset.values('status').annotate(count=Count('id'))
         by_type = self.queryset.values('leave_type').annotate(count=Count('id'))
         
-        # Current month leaves
         now = timezone.now()
         current_month_leaves = self.queryset.filter(
             start_date__month=now.month,
@@ -257,12 +256,10 @@ class AttendanceViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['get'])
     def statistics(self, request):
         """Get attendance statistics"""
-        # Today's stats
         today = timezone.now().date()
         today_attendance = self.queryset.filter(date=today)
         today_stats = today_attendance.values('status').annotate(count=Count('id'))
         
-        # This month's stats
         this_month_attendance = self.queryset.filter(
             date__month=today.month,
             date__year=today.year
@@ -348,7 +345,6 @@ class PayrollViewSet(viewsets.ModelViewSet):
         total_payrolls = self.queryset.count()
         by_status = self.queryset.values('status').annotate(count=Count('id'))
         
-        # Current month
         now = timezone.now()
         current_month_payroll = self.queryset.filter(
             month=now.month,

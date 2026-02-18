@@ -47,7 +47,6 @@ class TimetableEntrySerializer(serializers.ModelSerializer):
         subject = data.get('subject')
         teacher = data.get('teacher')
 
-        # Validate break periods
         if time_slot and time_slot.is_break:
             if subject or teacher:
                 raise serializers.ValidationError('Break periods cannot have subjects or teachers assigned.')
