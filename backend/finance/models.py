@@ -256,11 +256,10 @@ class Expense(models.Model):
 
 class Budget(models.Model):
     """Manages budgets for academic years"""
-    academic_year = models.ForeignKey(
+    academic_year = models.OneToOneField(
         AcademicYear,
         on_delete=models.CASCADE,
-        related_name='budgets',
-        unique=True,
+        related_name='budget',
         db_index=True
     )
     total_budget = models.DecimalField(max_digits=12, decimal_places=2)
