@@ -13,7 +13,7 @@ class TimeSlotAdmin(admin.ModelAdmin):
 class TimetableEntryInline(admin.TabularInline):
     model = TimetableEntry
     extra = 1
-    fields = ['time_slot', 'subject', 'teacher', 'room', 'notes']
+    fields = ['time_slot', 'subject', 'teacher_assignment']
 
 
 @admin.register(Timetable)
@@ -28,8 +28,14 @@ class TimetableAdmin(admin.ModelAdmin):
 
 @admin.register(TimetableEntry)
 class TimetableEntryAdmin(admin.ModelAdmin):
-    list_display = ['timetable', 'time_slot', 'subject', 'teacher', 'room']
+    list_display = ['timetable', 'time_slot', 'subject', 'get_teacher']
     list_filter = ['timetable__school_class', 'time_slot__day_of_week', 'subject']
-    search_fields = ['timetable__name', 'subject__name', 'teacher__first_name', 'teacher__last_name']
+    search_fields = ['timetable__name', 'subject__name', 'teacher_assignment__teacher__first_name', 'teacher_assignment__teacher__last_name']
     ordering = ['timetable', 'time_slot__day_of_week', 'time_slot__order']
+    
+    @admin.display(description='Teacher')
+    def get_teacher(self, obj):
+        if obj.teacher_assignment:
+            return obj.teacher_assignment.teacher
+        return '-'
 
