@@ -21,10 +21,10 @@ class StaffProfileAdmin(admin.ModelAdmin):
 
 @admin.register(Leave)
 class LeaveAdmin(admin.ModelAdmin):
-    list_display = ['staff', 'leave_type', 'start_date', 'end_date', 'total_days', 'status', 'created_at']
+    list_display = ['staff', 'leave_type', 'start_date', 'end_date', 'status', 'created_at']
     list_filter = ['status', 'leave_type', 'start_date']
-    search_fields = ['staff__first_name', 'staff__last_name', 'reason']
-    readonly_fields = ['total_days', 'created_at', 'updated_at']
+    search_fields = ['staff__user__first_name', 'staff__user__last_name', 'reason']
+    readonly_fields = ['created_at', 'updated_at']
     ordering = ['-created_at']
 
 

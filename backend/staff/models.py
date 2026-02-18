@@ -7,7 +7,7 @@ from adminstration.models import AcademicYear, Term, Subject
 class Department(models.Model):
     """Represents school departments"""
     name = models.CharField(max_length=100, unique=True)
-    code = models.CharField(max_length=20, unique=True)
+    code = models.CharField(max_length=20, unique=True, db_index=True)
     description = models.TextField(blank=True, null=True)
     head = models.ForeignKey(
         settings.AUTH_USER_MODEL,
@@ -15,9 +15,10 @@ class Department(models.Model):
         null=True,
         blank=True,
         related_name='headed_departments',
-        limit_choices_to={'role__in': ['teacher', 'admin']}
+        limit_choices_to={'role__in': ['teacher', 'admin']},
+        db_index=True
     )
-    is_active = models.BooleanField(default=True)
+    is_active = models.BooleanField(default=True, db_index=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -48,9 +49,10 @@ class StaffProfile(models.Model):
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
         related_name='staff_profile',
-        limit_choices_to={'role__in': ['teacher', 'accountant', 'hr', 'admin']}
+        limit_choices_to={'role__in': ['teacher', 'accountant', 'hr', 'admin']},
+        db_index=True
     )
-    employee_id = models.CharField(max_length=20, unique=True)
+    employee_id = models.CharField(max_length=20, unique=True, db_index=True)
     date_of_birth = models.DateField()
     gender = models.CharField(max_length=10)
     nationality = models.CharField(max_length=50, blank=True, null=True)
@@ -69,12 +71,13 @@ class StaffProfile(models.Model):
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
-        related_name='staff_members'
+        related_name='staff_members',
+        db_index=True
     )
     position = models.CharField(max_length=100)
-    employment_type = models.CharField(max_length=20, choices=EMPLOYMENT_TYPE_CHOICES, default='full_time')
-    date_of_joining = models.DateField()
-    date_of_leaving = models.DateField(blank=True, null=True)
+    employment_type = models.CharField(max_length=20, choices=EMPLOYMENT_TYPE_CHOICES, default='full_time', db_index=True)
+    date_of_joining = models.DateField(db_index=True)
+    date_of_leaving = models.DateField(blank=True, null=True, db_index=True)
     
     highest_qualification = models.CharField(max_length=100, blank=True, null=True)
     specialization = models.CharField(max_length=100, blank=True, null=True)
@@ -84,13 +87,17 @@ class StaffProfile(models.Model):
     
     bio = models.TextField(blank=True, null=True)
     photo = models.URLField(blank=True, null=True)
-    is_active = models.BooleanField(default=True)
+    is_active = models.BooleanField(default=True, db_index=True)
     
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
         ordering = ['-date_of_joining']
+        indexes = [
+            models.Index(fields=['department', 'is_active']),
+            models.Index(fields=['user', 'is_active']),
+        ]
 
     def save(self, *args, **kwargs):
         if not self.employee_id:
@@ -102,7 +109,7 @@ class StaffProfile(models.Model):
         super().save(*args, **kwargs)
 
     def __str__(self):
-        return f"{self.user.first_name} {self.user.last_name} ({self.employee_id})"
+        return f"{self.user.first_name} {self.user.last_name}"
 
 
 class Leave(models.Model):
@@ -126,17 +133,16 @@ class Leave(models.Model):
     )
 
     staff = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
+        StaffProfile,
         on_delete=models.CASCADE,
-        related_name='leave_applications',
-        limit_choices_to={'role__in': ['teacher', 'accountant', 'hr']}
+        related_name='leaves',
+        db_index=True
     )
-    leave_type = models.CharField(max_length=20, choices=LEAVE_TYPE_CHOICES)
-    start_date = models.DateField()
-    end_date = models.DateField()
-    total_days = models.PositiveIntegerField()
+    leave_type = models.CharField(max_length=20, choices=LEAVE_TYPE_CHOICES, db_index=True)
+    start_date = models.DateField(db_index=True)
+    end_date = models.DateField(db_index=True)
     reason = models.TextField()
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending', db_index=True)
     approved_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.SET_NULL,
@@ -151,7 +157,11 @@ class Leave(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        ordering = ['-created_at']
+        ordering = ['-start_date']
+        indexes = [
+            models.Index(fields=['staff', 'status']),
+            models.Index(fields=['start_date', 'end_date']),
+        ]
 
     def clean(self):
         if self.start_date and self.end_date:
@@ -165,7 +175,7 @@ class Leave(models.Model):
         super().save(*args, **kwargs)
 
     def __str__(self):
-        return f"{self.staff.first_name} {self.staff.last_name} - {self.get_leave_type_display()} ({self.start_date} to {self.end_date})"
+        return f"{self.staff.user.first_name} {self.staff.user.last_name} - {self.get_leave_type_display()} ({self.start_date} to {self.end_date})"
 
 
 class Attendance(models.Model):
@@ -179,13 +189,13 @@ class Attendance(models.Model):
     )
 
     staff = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
+        StaffProfile,
         on_delete=models.CASCADE,
-        related_name='attendance_records',
-        limit_choices_to={'role__in': ['teacher', 'accountant', 'hr']}
+        related_name='attendances',
+        db_index=True
     )
-    date = models.DateField()
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES)
+    date = models.DateField(db_index=True)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, db_index=True)
     check_in_time = models.TimeField(blank=True, null=True)
     check_out_time = models.TimeField(blank=True, null=True)
     remarks = models.TextField(blank=True, null=True)
@@ -209,7 +219,7 @@ class Attendance(models.Model):
         ]
 
     def __str__(self):
-        return f"{self.staff.first_name} {self.staff.last_name} - {self.date} ({self.get_status_display()})"
+        return f"{self.staff.user.first_name} {self.staff.user.last_name} - {self.date} ({self.get_status_display()})"
 
 
 class Payroll(models.Model):
@@ -222,19 +232,31 @@ class Payroll(models.Model):
     )
 
     staff = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
+        StaffProfile,
         on_delete=models.CASCADE,
-        related_name='payroll_records',
-        limit_choices_to={'role__in': ['teacher', 'accountant', 'hr']}
+        related_name='payrolls',
+        db_index=True
+    )
+    academic_year = models.ForeignKey(
+        AcademicYear,
+        on_delete=models.CASCADE,
+        related_name='payrolls',
+        db_index=True
+    )
+    term = models.ForeignKey(
+        Term,
+        on_delete=models.CASCADE,
+        related_name='payrolls',
+        db_index=True
     )
     month = models.PositiveIntegerField()  # 1-12
     year = models.PositiveIntegerField()
     basic_salary = models.DecimalField(max_digits=10, decimal_places=2)
-    allowances = models.DecimalField(max_digits=10, decimal_places=2, default=0)
-    deductions = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    allowances = models.DecimalField(max_digits=10, decimal_places=2, default='0.0')
+    deductions = models.DecimalField(max_digits=10, decimal_places=2, default='0.0')
     net_salary = models.DecimalField(max_digits=10, decimal_places=2)
-    payment_date = models.DateField(blank=True, null=True)
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='draft')
+    payment_date = models.DateField(blank=True, null=True, db_index=True)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='draft', db_index=True)
     remarks = models.TextField(blank=True, null=True)
     processed_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
@@ -248,12 +270,11 @@ class Payroll(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        ordering = ['-year', '-month']
-        constraints = [
-            models.UniqueConstraint(
-                fields=['staff', 'month', 'year'],
-                name='unique_payroll_per_staff_per_month'
-            )
+        ordering = ['-year', '-month', 'staff']
+        unique_together = ('staff', 'month', 'year')
+        indexes = [
+            models.Index(fields=['academic_year', 'term']),
+            models.Index(fields=['status', 'payment_date']),
         ]
 
     def clean(self):
@@ -268,5 +289,5 @@ class Payroll(models.Model):
     def __str__(self):
         from datetime import date
         month_name = date(self.year, self.month, 1).strftime('%B')
-        return f"{self.staff.first_name} {self.staff.last_name} - {month_name} {self.year}"
+        return f"{self.staff.user.first_name} {self.staff.user.last_name} - {month_name} {self.year}"
 

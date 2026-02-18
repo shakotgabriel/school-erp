@@ -3,11 +3,11 @@ from django.conf import settings
 from adminstration.models import Subject, AcademicYear, SchoolClass, Section
 
 class TeacherAssignment(models.Model):
-	teacher = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, limit_choices_to={"role": "teacher"}, related_name="assignments")
-	subject = models.ForeignKey(Subject, on_delete=models.CASCADE, related_name="teacher_assignments")
-	school_class = models.ForeignKey(SchoolClass, on_delete=models.CASCADE, related_name="teacher_assignments")
-	section = models.ForeignKey(Section, on_delete=models.SET_NULL, null=True, blank=True, related_name="teacher_assignments")
-	academic_year = models.ForeignKey(AcademicYear, on_delete=models.CASCADE, related_name="teacher_assignments")
+	teacher = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, limit_choices_to={"role": "teacher"}, related_name="assignments", db_index=True)
+	subject = models.ForeignKey(Subject, on_delete=models.CASCADE, related_name="teacher_assignments", db_index=True)
+	school_class = models.ForeignKey(SchoolClass, on_delete=models.CASCADE, related_name="teacher_assignments", db_index=True)
+	section = models.ForeignKey(Section, on_delete=models.SET_NULL, null=True, blank=True, related_name="teacher_assignments", db_index=True)
+	academic_year = models.ForeignKey(AcademicYear, on_delete=models.CASCADE, related_name="teacher_assignments", db_index=True)
 	assigned_on = models.DateTimeField(auto_now_add=True)
 
 	class Meta:
@@ -18,16 +18,16 @@ class TeacherAssignment(models.Model):
 
 
 class StudentProfile(models.Model):
-	user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="student_profile", blank=True, null=True)
-	admission_number = models.CharField(max_length=20, unique=True, blank=True, null=True)
+	user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="student_profile", blank=True, null=True, db_index=True)
+	admission_number = models.CharField(max_length=20, unique=True, blank=True, null=True, db_index=True)
 	first_name = models.CharField(max_length=50)
 	middle_name = models.CharField(max_length=50, blank=True, null=True)
 	last_name = models.CharField(max_length=50)
 	dob = models.DateField()
 	gender = models.CharField(max_length=10)
 	religion = models.CharField(max_length=30, blank=True, null=True)
-	guardian = models.ForeignKey('admission.Guardian', on_delete=models.SET_NULL, null=True, blank=True, related_name="students")
-	admission_application = models.OneToOneField('admission.AdmissionApplication', on_delete=models.SET_NULL, null=True, blank=True, related_name="student_profile")
+	guardian = models.ForeignKey('admission.Guardian', on_delete=models.SET_NULL, null=True, blank=True, related_name="students", db_index=True)
+	admission_application = models.OneToOneField('admission.AdmissionApplication', on_delete=models.SET_NULL, null=True, blank=True, related_name="student_profile", db_index=True)
 	created_at = models.DateTimeField(auto_now_add=True)
 
 	def save(self, *args, **kwargs):
@@ -43,7 +43,7 @@ class StudentProfile(models.Model):
 		return f"{self.first_name} {self.last_name}"
 
 class MedicalRecord(models.Model):
-	student = models.ForeignKey(StudentProfile, on_delete=models.CASCADE, related_name="medical_records")
+	student = models.ForeignKey(StudentProfile, on_delete=models.CASCADE, related_name="medical_records", db_index=True)
 	record_date = models.DateField(auto_now_add=True)
 	description = models.TextField()
 	doctor = models.CharField(max_length=100, blank=True, null=True)
@@ -53,7 +53,7 @@ class MedicalRecord(models.Model):
 		return f"MedicalRecord({self.student}, {self.record_date})"
 
 class DisciplineRecord(models.Model):
-	student = models.ForeignKey(StudentProfile, on_delete=models.CASCADE, related_name="discipline_records")
+	student = models.ForeignKey(StudentProfile, on_delete=models.CASCADE, related_name="discipline_records", db_index=True)
 	record_date = models.DateField(auto_now_add=True)
 	incident = models.TextField()
 	action_taken = models.TextField(blank=True, null=True)
@@ -64,10 +64,10 @@ class DisciplineRecord(models.Model):
 		return f"DisciplineRecord({self.student}, {self.record_date})"
 
 class Enrollment(models.Model):
-	student = models.ForeignKey(StudentProfile, on_delete=models.CASCADE, related_name="enrollments")
-	academic_year = models.ForeignKey(AcademicYear, on_delete=models.PROTECT, related_name="enrollments")
-	school_class = models.ForeignKey(SchoolClass, on_delete=models.PROTECT, related_name="enrollments")
-	section = models.ForeignKey(Section, on_delete=models.SET_NULL, null=True, blank=True, related_name="enrollments")
+	student = models.ForeignKey(StudentProfile, on_delete=models.CASCADE, related_name="enrollments", db_index=True)
+	academic_year = models.ForeignKey(AcademicYear, on_delete=models.PROTECT, related_name="enrollments", db_index=True)
+	school_class = models.ForeignKey(SchoolClass, on_delete=models.PROTECT, related_name="enrollments", db_index=True)
+	section = models.ForeignKey(Section, on_delete=models.SET_NULL, null=True, blank=True, related_name="enrollments", db_index=True)
 	enrolled_on = models.DateTimeField(auto_now_add=True)
 	is_active = models.BooleanField(default=True)
 

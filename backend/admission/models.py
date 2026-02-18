@@ -6,8 +6,8 @@ from adminstration.models import AcademicYear, SchoolClass
 class Guardian(models.Model):
 	first_name = models.CharField(max_length=50)
 	last_name = models.CharField(max_length=50)
-	phone = models.CharField(max_length=20)
-	email = models.EmailField(blank=True, null=True)
+	phone = models.CharField(max_length=20, db_index=True)
+	email = models.EmailField(blank=True, null=True, db_index=True)
 	relationship = models.CharField(max_length=30, blank=True, null=True)
 	address = models.CharField(max_length=255, blank=True, null=True)
 
@@ -30,11 +30,11 @@ class AdmissionApplication(models.Model):
 	religion = models.CharField(max_length=30, blank=True, null=True)
 	preferred_class = models.ForeignKey(SchoolClass, on_delete=models.PROTECT, related_name="applications")
 	preferred_academic_year = models.ForeignKey(AcademicYear, on_delete=models.PROTECT, related_name="applications")
-	guardian = models.ForeignKey(Guardian, on_delete=models.CASCADE, related_name="applications")
+	guardian = models.ForeignKey(Guardian, on_delete=models.CASCADE, related_name="applications", db_index=True)
 	previous_school = models.CharField(max_length=100, blank=True, null=True)
 	status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="draft")
 	applied_on = models.DateTimeField(auto_now_add=True)
-	submitted_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, blank=True, null=True, related_name="admission_applications")
+	submitted_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, blank=True, null=True, related_name="admission_applications", db_index=True)
 	notes = models.TextField(blank=True, null=True)
 
 	class Meta:
