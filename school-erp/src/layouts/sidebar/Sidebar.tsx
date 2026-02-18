@@ -108,16 +108,16 @@ export default function Sidebar({ open, onClose }: { open?: boolean; onClose?: (
   const role = user?.role ?? "student";
   const items = navByRole[role] ?? [];
 
-  // Close sidebar on route change (mobile)
+
   useEffect(() => {
     if (onClose) {
       onClose();
     }
-  }, [pathname]);
+  }, [onClose, pathname]);
 
   return (
     <>
-      {/* Mobile overlay */}
+  
       {open && (
         <div
           className="fixed inset-0 z-40 bg-black/50 md:hidden"
@@ -125,7 +125,7 @@ export default function Sidebar({ open, onClose }: { open?: boolean; onClose?: (
         />
       )}
 
-      {/* Sidebar */}
+  
       <aside
         className={`
           fixed md:sticky top-0 h-screen w-64 border-r bg-background z-50 flex flex-col
@@ -142,7 +142,7 @@ export default function Sidebar({ open, onClose }: { open?: boolean; onClose?: (
                 {role.toUpperCase()} Portal
               </div>
             </div>
-            {/* Close button for mobile */}
+        
             <Button
               variant="ghost"
               size="sm"
