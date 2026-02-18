@@ -93,7 +93,6 @@ class LeaveSerializer(serializers.ModelSerializer):
             if start_date > end_date:
                 raise serializers.ValidationError({'end_date': 'End date must be later than or equal to start date.'})
             
-            # Calculate total days
             data['total_days'] = (end_date - start_date).days + 1
 
         return data

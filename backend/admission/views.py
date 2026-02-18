@@ -27,7 +27,6 @@ class AdmissionApplicationViewSet(viewsets.ModelViewSet):
 		app = self.get_object()
 		if app.status == "accepted":
 			return Response({"detail": "Already accepted."}, status=status.HTTP_400_BAD_REQUEST)
-		# Create StudentProfile
 		student = StudentProfile.objects.create(
 			first_name=app.first_name,
 			middle_name=app.middle_name,
@@ -38,7 +37,6 @@ class AdmissionApplicationViewSet(viewsets.ModelViewSet):
 			guardian=app.guardian,
 			admission_application=app,
 		)
-		# Create Enrollment
 		enrollment = Enrollment.objects.create(
 			student=student,
 			academic_year=app.preferred_academic_year,

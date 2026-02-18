@@ -39,7 +39,6 @@ class TimeSlot(models.Model):
             if self.start_time >= self.end_time:
                 raise ValidationError({'end_time': 'End time must be later than start time.'})
         
-        # Check for overlapping time slots on the same day
         if self.pk:
             overlapping = TimeSlot.objects.filter(
                 day_of_week=self.day_of_week,
@@ -169,16 +168,13 @@ class TimetableEntry(models.Model):
         ]
 
     def clean(self):
-        # If time slot is a break, subject and teacher should be null
         if self.time_slot and self.time_slot.is_break:
             if self.subject or self.teacher:
                 raise ValidationError('Break periods cannot have subjects or teachers assigned.')
         else:
-            # Regular periods should have a subject
             if not self.subject:
                 raise ValidationError({'subject': 'Non-break periods must have a subject assigned.'})
 
-        # Check if teacher is already assigned to another class at the same time
         if self.teacher and self.time_slot:
             conflicting_entries = TimetableEntry.objects.filter(
                 teacher=self.teacher,

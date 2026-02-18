@@ -26,7 +26,6 @@ class StreamSerializer(serializers.ModelSerializer):
 class SectionSerializer(serializers.ModelSerializer):
     school_class = serializers.SlugRelatedField(slug_field="name", queryset=SchoolClass.objects.all())
     stream = serializers.SlugRelatedField(slug_field="name", queryset=Stream.objects.all(), allow_null=True, required=False)
-    # Set a default queryset to avoid DRF assertion error; will override in __init__
     from users.models import User
     class_teacher = serializers.SlugRelatedField(slug_field="email", queryset=User.objects.filter(role='teacher'), allow_null=True, required=False)
     class Meta:
@@ -34,7 +33,6 @@ class SectionSerializer(serializers.ModelSerializer):
         fields = "__all__"
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        # Lazy import to avoid circular import
         from users.models import User
         self.fields['class_teacher'].queryset = User.objects.filter(role='teacher')
 

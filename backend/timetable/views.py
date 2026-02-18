@@ -113,7 +113,6 @@ class TimetableViewSet(viewsets.ModelViewSet):
         teacher_id = request.query_params.get('teacher_id')
         
         if not teacher_id:
-            # If no teacher_id provided, use current user if they're a teacher
             if request.user.role == 'teacher':
                 teacher_id = request.user.id
             else:
@@ -134,7 +133,6 @@ class TimetableViewSet(viewsets.ModelViewSet):
         """Duplicate a timetable for a different term or class"""
         original = self.get_object()
         
-        # Get new academic year and term from request
         new_term_id = request.data.get('term_id')
         new_academic_year_id = request.data.get('academic_year_id')
         
@@ -144,7 +142,6 @@ class TimetableViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST
             )
         
-        # Create duplicate timetable
         new_timetable = Timetable.objects.create(
             name=f"{original.name} (Copy)",
             school_class=original.school_class,
@@ -154,7 +151,6 @@ class TimetableViewSet(viewsets.ModelViewSet):
             created_by=request.user
         )
         
-        # Copy all entries
         for entry in original.entries.all():
             TimetableEntry.objects.create(
                 timetable=new_timetable,
@@ -205,7 +201,6 @@ class TimetableEntryViewSet(viewsets.ModelViewSet):
         teacher_id = request.query_params.get('teacher_id')
         
         if not teacher_id:
-            # If no teacher_id provided, use current user if they're a teacher
             if request.user.role == 'teacher':
                 teacher_id = request.user.id
             else:
@@ -216,7 +211,6 @@ class TimetableEntryViewSet(viewsets.ModelViewSet):
         
         entries = self.queryset.filter(teacher_id=teacher_id)
         
-        # Group by day
         days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']
         schedule = {}
         

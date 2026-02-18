@@ -22,7 +22,6 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     is_active = models.BooleanField(default=True)
     is_verified = models.BooleanField(default=False)
-    # Mark that a first-login notification for staff was already sent
     first_login_notified = models.BooleanField(default=False)
     email_verified_at = models.DateTimeField(blank=True, null=True)
     is_staff = models.BooleanField(default=False)
@@ -80,7 +79,6 @@ class UserProfile(models.Model):
             return self.user.properties.count()
         return 0
     def __str__(self):
-        # defensive: user.email may be None for student-less accounts
         owner = self.user.email or self.user.get_full_name() or f"user-{self.user.pk}"
         return f"{owner} Profile"
 class PasswordResetToken(models.Model):

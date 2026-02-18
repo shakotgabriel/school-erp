@@ -32,7 +32,6 @@ class StudentProfile(models.Model):
 
 	def save(self, *args, **kwargs):
 		if not self.admission_number:
-			# Format: SYYYYMMDDXXXX (S + date + random 4 digits)
 			import random
 			from datetime import datetime
 			date_str = datetime.now().strftime('%Y%m%d')

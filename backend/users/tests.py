@@ -112,7 +112,6 @@ class SerializerTests(TestCase):
 		user = User.objects.create_user(email='x@y.com', first_name='X', last_name='Y', role='teacher', password='OrigP@ss1')
 		req = SimpleNamespace(user=user)
 
-		# wrong old password
 		ser = ChangePasswordSerializer(data={
 			'old_password': 'wrong',
 			'new_password': 'NewStrongP@ss1',
@@ -120,7 +119,6 @@ class SerializerTests(TestCase):
 		}, context={'request': req})
 		self.assertFalse(ser.is_valid())
 
-		# correct old password
 		ser2 = ChangePasswordSerializer(data={
 			'old_password': 'OrigP@ss1',
 			'new_password': 'NewStrongP@ss1',

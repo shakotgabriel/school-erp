@@ -11,7 +11,6 @@ from users.permissions import IsAdmin, IsTeacher, IsStudent, IsOwnerOrReadOnly, 
 class StudentProfileViewSet(viewsets.ModelViewSet):
 	queryset = StudentProfile.objects.all()
 	serializer_class = StudentProfileSerializer
-	# Admins can manage all, students can view their own profile
 	def get_permissions(self):
 		if self.action in ['list', 'retrieve']:
 			return [IsAdminOrRole('student')]
@@ -30,7 +29,6 @@ class StudentProfileViewSet(viewsets.ModelViewSet):
 class EnrollmentViewSet(viewsets.ModelViewSet):
 	queryset = Enrollment.objects.all()
 	serializer_class = EnrollmentSerializer
-	# Admins can manage all, students can view their own enrollment
 	def get_permissions(self):
 		if self.action in ['list', 'retrieve']:
 			return [IsAdminOrRole('student')]
@@ -42,7 +40,6 @@ class EnrollmentViewSet(viewsets.ModelViewSet):
 class MedicalRecordViewSet(viewsets.ModelViewSet):
 	queryset = MedicalRecord.objects.all()
 	serializer_class = MedicalRecordSerializer
-	# Admins can manage all, students can view their own medical records
 	def get_permissions(self):
 		if self.action in ['list', 'retrieve']:
 			return [IsAdminOrRole('student')]
@@ -54,11 +51,9 @@ class MedicalRecordViewSet(viewsets.ModelViewSet):
 class TeacherAssignmentViewSet(viewsets.ModelViewSet):
 	queryset = TeacherAssignment.objects.all()
 	serializer_class = TeacherAssignmentSerializer
-	# Admins can manage all, teachers can view their own assignments
 	def get_permissions(self):
 		if self.action in ['list', 'retrieve']:
 			return [IsAdminOrRole('teacher')]
-		# Only admins can create, update, or delete assignments
 		return [IsAdmin()]
 	filter_backends = [DjangoFilterBackend, filters.SearchFilter]
 	filterset_fields = ['teacher', 'subject', 'school_class', 'section', 'academic_year']
@@ -66,7 +61,6 @@ class TeacherAssignmentViewSet(viewsets.ModelViewSet):
 class DisciplineRecordViewSet(viewsets.ModelViewSet):
 	queryset = DisciplineRecord.objects.all()
 	serializer_class = DisciplineRecordSerializer
-	# Admins can manage all, students can view their own discipline records
 	def get_permissions(self):
 		if self.action in ['list', 'retrieve']:
 			return [IsAdminOrRole('student')]

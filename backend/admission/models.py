@@ -44,7 +44,6 @@ class AdmissionApplication(models.Model):
 		]
 
 	def clean(self):
-		# Example: check age for class
 		pass
 
 	def __str__(self):

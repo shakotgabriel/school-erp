@@ -56,7 +56,6 @@ class StaffProfile(models.Model):
     nationality = models.CharField(max_length=50, blank=True, null=True)
     marital_status = models.CharField(max_length=20, choices=MARITAL_STATUS_CHOICES, blank=True, null=True)
     
-    # Contact Information
     address = models.TextField()
     city = models.CharField(max_length=100)
     state = models.CharField(max_length=100, blank=True, null=True)
@@ -65,7 +64,6 @@ class StaffProfile(models.Model):
     emergency_contact_phone = models.CharField(max_length=20)
     emergency_contact_relationship = models.CharField(max_length=50)
     
-    # Employment Details
     department = models.ForeignKey(
         Department,
         on_delete=models.SET_NULL,
@@ -78,15 +76,12 @@ class StaffProfile(models.Model):
     date_of_joining = models.DateField()
     date_of_leaving = models.DateField(blank=True, null=True)
     
-    # Qualifications
     highest_qualification = models.CharField(max_length=100, blank=True, null=True)
     specialization = models.CharField(max_length=100, blank=True, null=True)
     years_of_experience = models.PositiveIntegerField(default=0)
     
-    # Salary
     basic_salary = models.DecimalField(max_digits=10, decimal_places=2)
     
-    # Additional Info
     bio = models.TextField(blank=True, null=True)
     photo = models.URLField(blank=True, null=True)
     is_active = models.BooleanField(default=True)
@@ -163,7 +158,6 @@ class Leave(models.Model):
             if self.start_date > self.end_date:
                 raise ValidationError({'end_date': 'End date must be later than or equal to start date.'})
             
-            # Calculate total days
             self.total_days = (self.end_date - self.start_date).days + 1
 
     def save(self, *args, **kwargs):
