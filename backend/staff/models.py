@@ -1,3 +1,4 @@
+from decimal import Decimal
 from django.db import models
 from django.conf import settings
 from django.core.exceptions import ValidationError
@@ -252,8 +253,8 @@ class Payroll(models.Model):
     month = models.PositiveIntegerField()  # 1-12
     year = models.PositiveIntegerField()
     basic_salary = models.DecimalField(max_digits=10, decimal_places=2)
-    allowances = models.DecimalField(max_digits=10, decimal_places=2, default='0.0')
-    deductions = models.DecimalField(max_digits=10, decimal_places=2, default='0.0')
+    allowances = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0.00'))
+    deductions = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0.00'))
     net_salary = models.DecimalField(max_digits=10, decimal_places=2)
     payment_date = models.DateField(blank=True, null=True, db_index=True)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='draft', db_index=True)
