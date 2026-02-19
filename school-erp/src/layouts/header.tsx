@@ -34,9 +34,7 @@ export const Header: React.FC<HeaderProps> = ({ setSidebarOpen }) => {
 							<Menu className="h-5 w-5" />
 						</Button>
 					)}
-					<h1 className="text-base md:text-lg font-semibold whitespace-nowrap">
-						School ERP
-					</h1>
+			
 				</div>
 
 				<div className="flex-1 max-w-xl">

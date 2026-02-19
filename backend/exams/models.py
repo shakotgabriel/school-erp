@@ -1,6 +1,4 @@
 from django.db import models
-
-from django.db import models
 from students.models import StudentProfile
 from adminstration.models import Subject, AcademicYear, Term, SchoolClass, Section
 class Exam(models.Model):
@@ -26,5 +24,4 @@ class ExamResult(models.Model):
 
 	def __str__(self):
 		return f"{self.student} - {self.exam}: {self.marks_obtained} ({self.grade})"
-from django.db import models
 

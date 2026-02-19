@@ -176,7 +176,7 @@ class Leave(models.Model):
         super().save(*args, **kwargs)
 
     def __str__(self):
-        return f"{self.staff.user.first_name} {self.staff.user.last_name} - {self.get_leave_type_display()} ({self.start_date} to {self.end_date})"
+        return f"{self.staff.user.first_name} {self.staff.user.last_name} - {self.get_leave_type_display()} ({self.start_date} to {self.end_date})"  # type: ignore[attr-defined]
 
 
 class Attendance(models.Model):
@@ -220,7 +220,7 @@ class Attendance(models.Model):
         ]
 
     def __str__(self):
-        return f"{self.staff.user.first_name} {self.staff.user.last_name} - {self.date} ({self.get_status_display()})"
+        return f"{self.staff.user.first_name} {self.staff.user.last_name} - {self.date} ({self.get_status_display()})"  # type: ignore[attr-defined]
 
 
 class Payroll(models.Model):

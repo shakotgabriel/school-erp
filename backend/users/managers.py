@@ -53,3 +53,18 @@ class UserManager(BaseUserManager):
             raise ValueError('Superusers must have an email address')
 
         return self._create_user(email=email, password=password, role=role, **extra_fields)
+
+    def teachers(self):
+        return self.filter(role='teacher')
+
+    def students(self):
+        return self.filter(role='student')
+
+    def admins(self):
+        return self.filter(role='admin')
+
+    def accountants(self):
+        return self.filter(role='accountant')
+
+    def hrs(self):
+        return self.filter(role='hr')

@@ -1,4 +1,6 @@
 from django.db import models
+from decimal import Decimal
+from django.db.models import Sum
 from django.conf import settings
 from django.core.exceptions import ValidationError
 from adminstration.models import AcademicYear, Term, SchoolClass
@@ -144,9 +146,9 @@ class Invoice(models.Model):
     )
     issue_date = models.DateField(db_index=True)
     due_date = models.DateField(db_index=True)
-    total_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
-    paid_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
-    balance = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    total_amount = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0.00'))
+    paid_amount = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0.00'))
+    balance = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0.00'))
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='draft', db_index=True)
     notes = models.TextField(blank=True, null=True)
     created_by = models.ForeignKey(
@@ -185,12 +187,12 @@ class Invoice(models.Model):
 
     def update_amounts(self):
         """Recalculates total amount from invoice items"""
-        self.total_amount = self.items.aggregate(total=Sum('amount'))['total'] or 0
+        self.total_amount = self.items.aggregate(total=Sum('amount'))['total'] or Decimal('0.00')  # type: ignore[attr-defined]
         self.save()
 
     def update_paid_amount(self):
         """Recalculates paid amount from related payments"""
-        self.paid_amount = self.payments.filter(status='completed').aggregate(total=Sum('amount_paid'))['total'] or 0
+        self.paid_amount = self.payments.filter(status='completed').aggregate(total=Sum('amount_paid'))['total'] or Decimal('0.00')  # type: ignore[attr-defined]
         self.save()
 
 

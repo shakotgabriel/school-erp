@@ -62,7 +62,7 @@ class TimeSlot(models.Model):
         super().save(*args, **kwargs)
 
     def __str__(self):
-        return f"{self.get_day_of_week_display()} - {self.name} ({self.start_time} - {self.end_time})"
+        return f"{self.get_day_of_week_display()} - {self.name} ({self.start_time} - {self.end_time})"  # type: ignore[attr-defined]
 
 
 class Timetable(models.Model):

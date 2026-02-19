@@ -1,3 +1,5 @@
+from decimal import Decimal
+
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
@@ -12,7 +14,14 @@ from students.models import StudentProfile, Enrollment, TeacherAssignment
 from exams.models import Exam, ExamResult
 from finance.models import FeeStructure, FeePayment, Invoice, Expense, Budget
 from timetable.models import Timetable, TimeSlot, TimetableEntry
-from staff.models import StaffProfile, Leave, Attendance, Payroll, Department
+from staff.models import StaffProfile, Leave, Attendance as StaffAttendance, Payroll, Department
+from attendance.models import Attendance as StudentAttendance
+
+ZERO_DECIMAL = Decimal('0')
+
+
+def decimal_or_zero(value):
+    return value if value is not None else ZERO_DECIMAL
 
 
 @api_view(['GET'])
@@ -46,20 +55,28 @@ def overview_dashboard(request):
     total_subjects = Subject.objects.filter(is_active=True).count()
     
     total_fee_structures = FeeStructure.objects.filter(is_active=True).count()
-    total_revenue = FeePayment.objects.filter(status='completed').aggregate(total=Sum('amount_paid'))['total'] or 0
-    total_expenses = Expense.objects.aggregate(total=Sum('amount'))['total'] or 0
-    outstanding_invoices = Invoice.objects.filter(balance__gt=0).aggregate(total=Sum('balance'))['total'] or 0
-    
-    month_revenue = FeePayment.objects.filter(
-        status='completed',
-        payment_date__month=current_month,
-        payment_date__year=current_year
-    ).aggregate(total=Sum('amount_paid'))['total'] or 0
-    
-    month_expenses = Expense.objects.filter(
-        expense_date__month=current_month,
-        expense_date__year=current_year
-    ).aggregate(total=Sum('amount'))['total'] or 0
+    total_revenue = decimal_or_zero(
+        FeePayment.objects.filter(status='completed').aggregate(total=Sum('amount_paid'))['total']
+    )
+    total_expenses = decimal_or_zero(Expense.objects.aggregate(total=Sum('amount'))['total'])
+    outstanding_invoices = decimal_or_zero(
+        Invoice.objects.filter(balance__gt=0).aggregate(total=Sum('balance'))['total']
+    )
+
+    month_revenue = decimal_or_zero(
+        FeePayment.objects.filter(
+            status='completed',
+            payment_date__month=current_month,
+            payment_date__year=current_year
+        ).aggregate(total=Sum('amount_paid'))['total']
+    )
+
+    month_expenses = decimal_or_zero(
+        Expense.objects.filter(
+            expense_date__month=current_month,
+            expense_date__year=current_year
+        ).aggregate(total=Sum('amount'))['total']
+    )
     
     total_exams = Exam.objects.count()
     upcoming_exams = Exam.objects.filter(date__gte=now.date()).count()
@@ -68,8 +85,8 @@ def overview_dashboard(request):
     total_time_slots = TimeSlot.objects.filter(is_active=True).count()
     
     pending_leaves = Leave.objects.filter(status='pending').count()
-    today_attendance = Attendance.objects.filter(date=now.date()).count()
-    today_present = Attendance.objects.filter(date=now.date(), status='present').count()
+    today_attendance = StaffAttendance.objects.filter(date=now.date()).count()
+    today_present = StaffAttendance.objects.filter(date=now.date(), status='present').count()
     
     return Response({
         'users': {
@@ -99,14 +116,14 @@ def overview_dashboard(request):
             'active_timetables': active_timetables
         },
         'finance': {
-            'total_revenue': float(total_revenue),
-            'total_expenses': float(total_expenses),
-            'net_balance': float(total_revenue - total_expenses),
-            'outstanding': float(outstanding_invoices),
+            'total_revenue': total_revenue,
+            'total_expenses': total_expenses,
+            'net_balance': total_revenue - total_expenses,
+            'outstanding': outstanding_invoices,
             'this_month': {
-                'revenue': float(month_revenue),
-                'expenses': float(month_expenses),
-                'net': float(month_revenue - month_expenses)
+                'revenue': month_revenue,
+                'expenses': month_expenses,
+                'net': month_revenue - month_expenses
             }
         },
         'exams': {
@@ -139,12 +156,35 @@ def student_dashboard(request):
     thirty_days_ago = timezone.now() - timedelta(days=30)
     recent_enrollments = Enrollment.objects.filter(enrolled_on__gte=thirty_days_ago).count()
     
+    # Student attendance metrics
+    now = timezone.now()
+    today_student_attendance = StudentAttendance.objects.filter(date=now.date())
+    today_students_present = today_student_attendance.filter(status='present').count()
+    today_students_absent = today_student_attendance.filter(status='absent').count()
+    
+    this_month_attendance = StudentAttendance.objects.filter(
+        date__month=now.month,
+        date__year=now.year
+    )
+    attendance_by_status = this_month_attendance.values('status').annotate(count=Count('id'))
+    
     return Response({
         'total_students': total_students,
         'active_students': active_students,
         'by_class': list(enrollments_by_class),
         'by_gender': list(students_by_gender),
-        'recent_enrollments': recent_enrollments
+        'recent_enrollments': recent_enrollments,
+        'attendance': {
+            'today': {
+                'total': today_student_attendance.count(),
+                'present': today_students_present,
+                'absent': today_students_absent
+            },
+            'this_month': {
+                'total': this_month_attendance.count(),
+                'by_status': list(attendance_by_status)
+            }
+        }
     })
 
 
@@ -154,62 +194,85 @@ def finance_dashboard(request):
     """
     Dashboard focused on financial metrics
     """
-    total_revenue = FeePayment.objects.filter(status='completed').aggregate(total=Sum('amount_paid'))['total'] or 0
+    total_revenue = decimal_or_zero(
+        FeePayment.objects.filter(status='completed').aggregate(total=Sum('amount_paid'))['total']
+    )
     revenue_by_method = FeePayment.objects.filter(status='completed').values('payment_method').annotate(total=Sum('amount_paid'))
     
-    total_expenses = Expense.objects.aggregate(total=Sum('amount'))['total'] or 0
+    total_expenses = decimal_or_zero(Expense.objects.aggregate(total=Sum('amount'))['total'])
     expenses_by_category = Expense.objects.values('category').annotate(total=Sum('amount'))
     
     total_invoices = Invoice.objects.count()
     paid_invoices = Invoice.objects.filter(status='paid').count()
     overdue_invoices = Invoice.objects.filter(status='overdue').count()
-    total_outstanding = Invoice.objects.filter(balance__gt=0).aggregate(total=Sum('balance'))['total'] or 0
+    total_outstanding = decimal_or_zero(
+        Invoice.objects.filter(balance__gt=0).aggregate(total=Sum('balance'))['total']
+    )
     
-    active_budgets = Budget.objects.filter(status='active')
-    total_budget = active_budgets.aggregate(total=Sum('total_budget'))['total'] or 0
-    total_spent = active_budgets.aggregate(total=Sum('spent_amount'))['total'] or 0
-    budget_utilization = (total_spent / total_budget * 100) if total_budget > 0 else 0
+    active_budgets = Budget.objects.all()
+    total_budget = decimal_or_zero(active_budgets.aggregate(total=Sum('total_budget'))['total'])
+    total_spent = decimal_or_zero(active_budgets.aggregate(total=Sum('total_budget'))['total'])
+    if total_budget > ZERO_DECIMAL:
+        budget_utilization = (total_spent / total_budget * Decimal('100')).quantize(Decimal('0.01'))
+    else:
+        budget_utilization = ZERO_DECIMAL
     
     monthly_trends = []
     for i in range(6):
         month_date = timezone.now() - timedelta(days=30*i)
-        month_revenue = FeePayment.objects.filter(
-            status='completed',
-            payment_date__month=month_date.month,
-            payment_date__year=month_date.year
-        ).aggregate(total=Sum('amount_paid'))['total'] or 0
+        month_revenue = decimal_or_zero(
+            FeePayment.objects.filter(
+                status='completed',
+                payment_date__month=month_date.month,
+                payment_date__year=month_date.year
+            ).aggregate(total=Sum('amount_paid'))['total']
+        )
         
-        month_expenses = Expense.objects.filter(
-            expense_date__month=month_date.month,
-            expense_date__year=month_date.year
-        ).aggregate(total=Sum('amount'))['total'] or 0
+        month_expenses = decimal_or_zero(
+            Expense.objects.filter(
+                expense_date__month=month_date.month,
+                expense_date__year=month_date.year
+            ).aggregate(total=Sum('amount'))['total']
+        )
         
         monthly_trends.append({
             'month': month_date.strftime('%B %Y'),
-            'revenue': float(month_revenue),
-            'expenses': float(month_expenses),
-            'net': float(month_revenue - month_expenses)
+            'revenue': month_revenue,
+            'expenses': month_expenses,
+            'net': month_revenue - month_expenses
         })
     
     return Response({
         'revenue': {
-            'total': float(total_revenue),
-            'by_payment_method': [{'method': r['payment_method'], 'total': float(r['total'])} for r in revenue_by_method]
+            'total': total_revenue,
+            'by_payment_method': [
+                {
+                    'method': r['payment_method'],
+                    'total': decimal_or_zero(r['total'])
+                }
+                for r in revenue_by_method
+            ]
         },
         'expenses': {
-            'total': float(total_expenses),
-            'by_category': [{'category': e['category'], 'total': float(e['total'])} for e in expenses_by_category]
+            'total': total_expenses,
+            'by_category': [
+                {
+                    'category': e['category'],
+                    'total': decimal_or_zero(e['total'])
+                }
+                for e in expenses_by_category
+            ]
         },
         'invoices': {
             'total': total_invoices,
             'paid': paid_invoices,
             'overdue': overdue_invoices,
-            'outstanding': float(total_outstanding)
+            'outstanding': total_outstanding
         },
         'budgets': {
-            'total_allocated': float(total_budget),
-            'total_spent': float(total_spent),
-            'utilization_percentage': round(budget_utilization, 2)
+            'total_allocated': total_budget,
+            'total_spent': total_spent,
+            'utilization_percentage': budget_utilization
         },
         'monthly_trends': monthly_trends[::-1]  # Reverse to show oldest first
     })
@@ -236,20 +299,22 @@ def staff_dashboard(request):
     leaves_by_type = Leave.objects.values('leave_type').annotate(count=Count('id'))
     
     now = timezone.now()
-    this_month_attendance = Attendance.objects.filter(
+    this_month_attendance = StaffAttendance.objects.filter(
         date__month=now.month,
         date__year=now.year
     )
     attendance_by_status = this_month_attendance.values('status').annotate(count=Count('id'))
     
-    today_attendance = Attendance.objects.filter(date=now.date())
+    today_attendance = StaffAttendance.objects.filter(date=now.date())
     today_present = today_attendance.filter(status='present').count()
     today_absent = today_attendance.filter(status='absent').count()
     today_late = today_attendance.filter(status='late').count()
     
     current_month_payroll = Payroll.objects.filter(month=now.month, year=now.year)
     payroll_processed = current_month_payroll.filter(status__in=['processed', 'paid']).count()
-    total_payroll_amount = current_month_payroll.aggregate(total=Sum('net_salary'))['total'] or 0
+    total_payroll_amount = decimal_or_zero(
+        current_month_payroll.aggregate(total=Sum('net_salary'))['total']
+    )
     
     return Response({
         'staff': {
@@ -277,42 +342,40 @@ def staff_dashboard(request):
         },
         'payroll': {
             'current_month_processed': payroll_processed,
-            'current_month_total': float(total_payroll_amount)
+            'current_month_total': total_payroll_amount
         }
     })
-
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def academic_dashboard(request):
-    """
-    Dashboard focused on academic metrics
-    """
+    now = timezone.now()  # ✅ add this
+
     total_classes = SchoolClass.objects.filter(is_active=True).count()
     total_sections = Section.objects.filter(is_active=True).count()
     total_subjects = Subject.objects.filter(is_active=True).count()
-    
+
     students_per_class = Enrollment.objects.filter(is_active=True).values(
         'school_class__name'
     ).annotate(count=Count('id')).order_by('-count')
-    
+
     total_assignments = TeacherAssignment.objects.count()
     assignments_by_subject = TeacherAssignment.objects.values(
         'subject__name'
     ).annotate(count=Count('id')).order_by('-count')[:10]
-    
+
     active_timetables = Timetable.objects.filter(is_active=True).count()
     timetables_by_class = Timetable.objects.filter(is_active=True).values(
         'school_class__name'
     ).annotate(count=Count('id'))
-    
+
     total_exams = Exam.objects.count()
     upcoming_exams = Exam.objects.filter(date__gte=now.date()).count()
     completed_exams = Exam.objects.filter(date__lt=now.date()).count()
-    
+
     total_results = ExamResult.objects.count()
     average_score = ExamResult.objects.aggregate(avg=Avg('marks_obtained'))['avg'] or 0
-    
+
     return Response({
         'structure': {
             'classes': total_classes,
@@ -341,3 +404,38 @@ def academic_dashboard(request):
         }
     })
 
+
+# Dashboard Configuration ViewSets
+
+from rest_framework import viewsets
+from .models import Dashboard, DashboardWidget
+from .serializers import DashboardSerializer, DashboardWidgetSerializer
+from users.permissions import IsAdmin
+
+
+class DashboardViewSet(viewsets.ModelViewSet):
+    """
+    ViewSet for managing dashboard configurations.
+    Only admins can manage dashboards.
+    """
+    queryset = Dashboard.objects.select_related('created_by')
+    serializer_class = DashboardSerializer
+    permission_classes = [IsAdmin]
+    filterset_fields = ['type', 'is_active']
+    search_fields = ['name', 'description']
+    ordering_fields = ['name', 'type', 'created_at']
+    ordering = ['-created_at']
+
+
+class DashboardWidgetViewSet(viewsets.ModelViewSet):
+    """
+    ViewSet for managing dashboard widgets.
+    Only admins can manage widgets.
+    """
+    queryset = DashboardWidget.objects.select_related('dashboard')
+    serializer_class = DashboardWidgetSerializer
+    permission_classes = [IsAdmin]
+    filterset_fields = ['dashboard', 'widget_type', 'is_active']
+    search_fields = ['title', 'data_source']
+    ordering_fields = ['position', 'title', 'created_at']
+    ordering = ['position', 'title']

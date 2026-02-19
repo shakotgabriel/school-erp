@@ -3,22 +3,14 @@ import { NavLink, useLocation } from "react-router-dom";
 import { navByRole, type NavItem } from "./nav.config";
 import { useAuthStore } from "../../store/auth.store";
 import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
 import { ChevronDown, LogOut, X } from "lucide-react";
 
 function isPathActive(pathname: string, to?: string) {
   if (!to) return false;
-
   return pathname === to || pathname.startsWith(to + "/");
 }
 
-function NavGroup({
-  item,
-  pathname,
-}: {
-  item: NavItem;
-  pathname: string;
-}) {
+function NavGroup({ item, pathname }: { item: NavItem; pathname: string }) {
   const hasChildren = !!item.children?.length;
 
   const initiallyOpen = useMemo(() => {
@@ -28,27 +20,35 @@ function NavGroup({
 
   const [open, setOpen] = useState(initiallyOpen);
 
+  const baseLink =
+    "group flex items-center gap-2 rounded-xl px-3 py-2.5 text-sm transition";
+  const inactive =
+    "text-muted-foreground hover:bg-accent hover:text-accent-foreground";
+  const active =
+    "bg-accent text-accent-foreground font-medium shadow-sm";
+
   if (!hasChildren) {
     const Icon = item.icon;
     return (
       <NavLink
         to={item.to!}
         className={({ isActive }) =>
-          [
-            "flex items-center gap-2 rounded-md px-3 py-2 text-sm",
-            "hover:bg-accent hover:text-accent-foreground",
-            isActive ? "bg-accent text-accent-foreground font-medium" : "text-muted-foreground",
-          ].join(" ")
+          [baseLink, isActive ? active : inactive].join(" ")
         }
         end
       >
-        {Icon ? <Icon className="h-4 w-4" /> : null}
-        <span>{item.label}</span>
+        {Icon ? (
+          <span className="grid h-8 w-8 place-items-center rounded-lg bg-muted/60 group-hover:bg-muted">
+            <Icon className="h-4 w-4" />
+          </span>
+        ) : null}
+        <span className="truncate">{item.label}</span>
       </NavLink>
     );
   }
 
   const Icon = item.icon;
+  const groupIsActive = item.children!.some((c) => isPathActive(pathname, c.to));
 
   return (
     <div className="space-y-1">
@@ -56,22 +56,28 @@ function NavGroup({
         type="button"
         onClick={() => setOpen((v) => !v)}
         className={[
-          "w-full flex items-center justify-between rounded-md px-3 py-2 text-sm",
-          "hover:bg-accent hover:text-accent-foreground",
-          item.children!.some((c) => isPathActive(pathname, c.to))
-            ? "text-foreground font-medium"
-            : "text-muted-foreground",
+          "w-full flex items-center justify-between rounded-xl px-3 py-2.5 text-sm transition",
+          groupIsActive
+            ? "text-foreground font-medium bg-muted/40"
+            : "text-muted-foreground hover:bg-accent hover:text-accent-foreground",
         ].join(" ")}
       >
         <span className="flex items-center gap-2">
-          {Icon ? <Icon className="h-4 w-4" /> : null}
-          {item.label}
+          {Icon ? (
+            <span className="grid h-8 w-8 place-items-center rounded-lg bg-muted/60">
+              <Icon className="h-4 w-4" />
+            </span>
+          ) : null}
+          <span className="truncate">{item.label}</span>
         </span>
-        <ChevronDown className={`h-4 w-4 transition ${open ? "rotate-180" : ""}`} />
+
+        <ChevronDown
+          className={`h-4 w-4 transition ${open ? "rotate-180" : ""}`}
+        />
       </button>
 
       {open ? (
-        <div className="ml-4 space-y-1">
+        <div className="ml-3 border-l pl-3 space-y-1">
           {item.children!.map((child) => {
             const ChildIcon = child.icon;
             return (
@@ -80,15 +86,14 @@ function NavGroup({
                 to={child.to!}
                 className={({ isActive }) =>
                   [
-                    "flex items-center gap-2 rounded-md px-3 py-2 text-sm",
-                    "hover:bg-accent hover:text-accent-foreground",
-                    isActive ? "bg-accent text-accent-foreground font-medium" : "text-muted-foreground",
+                    "group flex items-center gap-2 rounded-xl px-3 py-2 text-sm transition",
+                    isActive ? active : inactive,
                   ].join(" ")
                 }
                 end
               >
                 {ChildIcon ? <ChildIcon className="h-4 w-4" /> : null}
-                <span>{child.label}</span>
+                <span className="truncate">{child.label}</span>
               </NavLink>
             );
           })}
@@ -98,9 +103,14 @@ function NavGroup({
   );
 }
 
-export default function Sidebar({ open, onClose }: { open?: boolean; onClose?: () => void }) {
-  const location = useLocation();
-  const pathname = location.pathname;
+export default function Sidebar({
+  open,
+  onClose,
+}: {
+  open?: boolean;
+  onClose?: () => void;
+}) {
+  const { pathname } = useLocation();
 
   const user = useAuthStore((s) => s.user);
   const logout = useAuthStore((s) => s.logout);
@@ -108,75 +118,96 @@ export default function Sidebar({ open, onClose }: { open?: boolean; onClose?: (
   const role = user?.role ?? "student";
   const items = navByRole[role] ?? [];
 
-
   useEffect(() => {
-    if (onClose) {
-      onClose();
-    }
+    if (onClose) onClose();
   }, [onClose, pathname]);
+
+ 
 
   return (
     <>
-  
+      
       {open && (
         <div
-          className="fixed inset-0 z-40 bg-black/50 md:hidden"
+          className="fixed inset-0 z-40 bg-black/50 backdrop-blur-[2px] md:hidden"
           onClick={onClose}
         />
       )}
 
-  
       <aside
-        className={`
-          fixed md:sticky top-0 h-screen w-64 border-r bg-background z-50 flex flex-col
-          transition-transform duration-300 md:translate-x-0
-          ${open ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
-        `}
+        className={[
+          "fixed md:sticky top-0 z-50 h-screen w-72 border-r bg-background",
+          "flex flex-col transition-transform duration-300 md:translate-x-0",
+          open ? "translate-x-0" : "-translate-x-full md:translate-x-0",
+        ].join(" ")}
       >
-        {/* Brand */}
-        <div className="px-4 py-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <div className="text-base font-semibold">School ERP</div>
-              <div className="text-xs text-muted-foreground">
-                {role.toUpperCase()} Portal
+        
+        <div className="relative px-4 pt-4 pb-3 bg-cyan-900">
+         
+          <div className="absolute inset-x-0 top-0 h-20 bg-gradient-to-b from-muted/60 to-transparent" />
+
+          <div className="relative flex items-start justify-between gap-3 ">
+            <div className="flex items-center gap-3">
+              <div className="h-30 w-30 overflow-hidden rounded-2xl border-white border-2 bg-muted/40 shadow-sm">
+                <img
+                  src="/EduPlan.png"
+                  alt="School ERP"
+                  className="h-full w-full "
+                />
+              </div>
+
+              <div>
+             
+<div className="">
+  <h1 className=" font-black text-white">SCHOOL ERP SYSTEM</h1>
+</div>
+            
               </div>
             </div>
-        
+
             <Button
               variant="ghost"
-              size="sm"
+              size="icon"
               className="md:hidden"
               onClick={onClose}
+              aria-label="Close sidebar"
             >
               <X className="h-5 w-5" />
             </Button>
           </div>
         </div>
 
-      <Separator />
+  
 
+     
+        <nav className="flex-1 overflow-y-auto px-3 py-3 bg-slate-800">
+          <div className="mb-2 px-2 text-[11px] font-medium tracking-wide text-muted-foreground">
       
-      <nav className="flex-1 overflow-y-auto px-3 py-3 space-y-1">
-        {items.map((item) => (
-          <NavGroup key={item.label} item={item} pathname={pathname} />
-        ))}
-      </nav>
+          </div>
 
-      <Separator />
+          <div className="space-y-1  p-10 text-white">
+            {items.map((item) => (
+              <NavGroup  key={item.label} item={item} pathname={pathname} />
+            ))}
+          </div>
+        </nav>
 
     
-      <div className="p-3 space-y-2">
-        <Button
-          variant="ghost"
-          className="w-full justify-start gap-2 text-muted-foreground"
-          onClick={() => logout()}
-        >
-          <LogOut className="h-4 w-4" />
-          Logout
-        </Button>
-      </div>
-    </aside>
+
+   
+        <div className="p-4 ">
+
+
+          <Button
+            variant="outline"
+            className="w-full justify-start gap-2 rounded-xl"
+            onClick={logout}
+          >
+            <LogOut className="h-4 w-4" />
+            Logout
+          </Button>
+        </div>
+      </aside>
     </>
   );
 }

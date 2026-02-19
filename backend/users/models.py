@@ -73,11 +73,7 @@ class UserProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
     company_name = models.CharField(max_length=255, blank=True, null=True)
     background_check_status = models.CharField(max_length=20, choices=BACKGROUND_STATUS, default='pending')
-    @property
-    def properties_count(self):
-        if hasattr(self.user, 'properties'):
-            return self.user.properties.count()
-        return 0
+    # Removed properties_count: no 'properties' relation on User
     def __str__(self):
         owner = self.user.email or self.user.get_full_name() or f"user-{self.user.pk}"
         return f"{owner} Profile"
